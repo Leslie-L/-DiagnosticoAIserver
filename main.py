@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 class Tweet(BaseModel):
-    tweet: str = Field(..., min_length=1, max_length=250)
+    tweet: str = Field(..., min_length=1, max_length=280)
     
 class Diabetes(BaseModel):
     highBP: int = Field(..., ge=0, le=1)
