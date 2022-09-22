@@ -23,6 +23,12 @@ import numpy as np
 app = FastAPI()
 origins = ["*"]
 
+pred_dict = {
+        "0":"No diabetes",
+        "1":"Prediabetes",
+        "2":"Diabetes"
+    }
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -111,10 +117,59 @@ def analizar_tweet(tweet:Tweet = Body(...)):
 
 ## MODELOS DIABETES
 @app.post("/model/diabetes")
-def analizar_tweet(paciente:Diabetes = Body(...)):
+def analizar_diabetes(paciente:Diabetes = Body(...)):
+    inputs = []
+
+    inputs.append(paciente.highBP)
+    inputs.append(paciente.highChol)
+    inputs.append(paciente.cholCheck)
+    inputs.append(np.log(paciente.bmi))
+    inputs.append(paciente.smoker)
+    inputs.append(paciente.stroke)
+    inputs.append(paciente.heartDiseaseorAttack)
+    inputs.append(paciente.physActivity)
+    inputs.append(paciente.fruits)
+    inputs.append(paciente.veggies)
+    inputs.append(paciente.hvyAlcoholConsump)
+    inputs.append(paciente.anyHealthcare)
+    inputs.append(paciente.noDocbcCost)
+    #genHlth = [0,0,0,0,0]
+    #genHlth[paciente.genHlth - 1] = 1
+    #inputs.extend(genHlth)
+    inputs.append(paciente.genHlth)
+    mentHlth = [0 for i in range(31)]
+    mentHlth[paciente.mentHlth - 1] = 1
+    inputs.extend(mentHlth)
+    physhlth = [0 for i in range(31)]
+    physhlth[paciente.physhlth - 1] = 1
+    inputs.extend(physhlth)
+    inputs.append(paciente.diffWalk)
+    inputs.append(paciente.sex)
+    age = [0,0,0,0,0,0,0,0,0,0,0,0,0]
+    age[paciente.age - 1] = 1
+    inputs.extend(age)
+    education = [0,0,0,0,0,0]
+    education[paciente.education - 1] = 1
+    inputs.extend(education)
+    income = [0,0,0,0,0,0,0,0]
+    income[paciente.income - 1] = 1
+    inputs.extend(income)
+    
+    inputs = np.array(inputs).reshape(-1, 105)
+    
+    probs = diabetes_model.predict(inputs)
+    
+    pred = np.argmax(probs[0])
+    
+    diag = pred_dict[str(pred)]
+    
+    print("NO ES TENSORFLOW!!!!")
+    print(diag)
+    print(pred)
+    print(probs[0][pred])
     
     return {
-        "Diagnostico": "Resultado",
-        "pCorrecto":70,
-        "precision":80
+        "Diagnostico": probs.tolist(),
+        "pCorrecto": probs.tolist(),
+        "precision":86
     }
