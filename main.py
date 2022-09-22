@@ -14,6 +14,10 @@ from fastapi import FastAPI
 from fastapi import Body, Query, Path, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+import tensorflow as tf
+import json
+import numpy as np
+
 
 
 app = FastAPI()
@@ -26,6 +30,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+tweet_model = tf.keras.models.load_model("tweets_resulting_model.h5")
+diabetes_model = tf.keras.models.load_model("diabetes_resulting_model.h5")
+
+tokenizer = None
+
+with open('tokenizer.json') as f:
+    data = json.load(f)
+    tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(data)
 
 class Tweet(BaseModel):
     tweet: str = Field(..., min_length=1, max_length=280)
@@ -73,11 +86,27 @@ def analizar_imagen(image:UploadFile = File(...)):
 ## MODELOS DEPRESION
 @app.post("/model/depresion")
 def analizar_tweet(tweet:Tweet = Body(...)):
+
+    tweet = tweet.tweet
+
+    tweet_norm = tweet.replace(r'[^a-zA-Z0-9\s{1}áéíóúüñÁÉÍÓÚÑ]', '')
+    tweet_norm = tweet_norm.lower().strip().rstrip('\n').rstrip('\r\n')
+    
+    seq = tokenizer.texts_to_sequences(tweet_norm)
+    x = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=34)
+    
+    prediction = tweet_model.predict(x)[0]
+    if (prediction >= 0.5):
+        diag = "Depresion"
+        prob = prediction
+    else:
+        diag = "No depresion"
+        prob = 1 - prediction
     
     return {
-        "Diagnostico": "loool",
-        "pCorrecto":90,
-        "precision":85
+        "Diagnostico": diag,
+        "pCorrecto": int(prediction*100),
+        "precision": 99
     }
 
 ## MODELOS DIABETES
