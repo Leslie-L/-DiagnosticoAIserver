@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import tensorflow as tf
 import json
 import numpy as np
+import cv2
 
 app = FastAPI()
 origins = ["*"]
@@ -37,6 +38,7 @@ app.add_middleware(
 
 tweet_model = tf.keras.models.load_model("tweets_resulting_model.h5")
 diabetes_model = tf.keras.models.load_model("diabetes_resulting_model.h5")
+fundus_model = tf.keras.models.load_model("fundus_resulting_model.h5")
 
 tokenizer = None
 
@@ -79,10 +81,19 @@ def home():
 
 ## MODELOS OCULAR
 @app.post("/model/eye")
-def analizar_imagen(image:UploadFile = File(...)):
+async def analizar_imagen(image:UploadFile = File(...)):
+    contents = await image.read()
+    nparr = np.fromstring(contents, np.uint8)
+    
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (712, 1072), interpolation = cv2.INTER_AREA)
+    img = img/255.0
+    inp = img.reshape(1, 712, 1072, 3)
+    pred = fundus_model.predict(inp)
     
     return {
-        "name": image.filename,
+        "preds": pred.tolist(),
         "cambio":"done"
     }
 
