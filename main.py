@@ -18,8 +18,6 @@ import tensorflow as tf
 import json
 import numpy as np
 
-
-
 app = FastAPI()
 origins = ["*"]
 
