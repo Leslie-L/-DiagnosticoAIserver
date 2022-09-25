@@ -14,7 +14,9 @@ from fastapi import FastAPI
 from fastapi import Body, Query, Path, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-import tensorflow as tf
+
+from tensorflow.keras.preprocessing.text import tokenizer_from_json
+from tensorflow.keras.models import load_model
 import json
 import numpy as np
 import cv2
@@ -36,15 +38,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-tweet_model = tf.keras.models.load_model("tweets_resulting_model.h5")
-diabetes_model = tf.keras.models.load_model("diabetes_resulting_model.h5")
-fundus_model = tf.keras.models.load_model("fundus_resulting_model.h5")
+tweet_model = load_model("tweets_resulting_model.h5")
+diabetes_model = load_model("diabetes_resulting_model.h5")
+fundus_model = load_model("fundus_resulting_model.h5")
 
 tokenizer = None
 
 with open('tokenizer.json') as f:
     data = json.load(f)
-    tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(data)
+    tokenizer = tokenizer_from_json(data)
 
 class Tweet(BaseModel):
     tweet: str = Field(..., min_length=1, max_length=280)
