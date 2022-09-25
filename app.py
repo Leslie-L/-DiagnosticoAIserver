@@ -23,7 +23,7 @@ import numpy as np
 import cv2
 
 app = FastAPI()
-origins = ["*"]
+origins = ["*", "https://leslie-l.github.io"]
 
 pred_dict = {
         "0":"No diabetes",
