@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 import json
 import numpy as np
@@ -110,7 +111,7 @@ def analizar_tweet(tweet:Tweet = Body(...)):
     tweet_norm = tweet_norm.lower().strip().rstrip('\n').rstrip('\r\n')
     
     seq = tokenizer.texts_to_sequences(tweet_norm)
-    x = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=34)
+    x = pad_sequences(seq, maxlen=34)
     
     prediction = tweet_model.predict(x)[0]
     if (prediction >= 0.5):
